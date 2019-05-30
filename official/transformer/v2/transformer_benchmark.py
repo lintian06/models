@@ -40,6 +40,7 @@ class TransformerBenchmark(PerfZeroBenchmark):
 
   def __init__(self, output_dir=None, default_flags=None, root_data_dir=None,
                flag_methods=None):
+    self.root_data_dir = root_data_dir
     self.train_data_dir = os.path.join(root_data_dir,
                                        TRANSFORMER_EN2DE_DATA_DIR_NAME)
 
@@ -257,9 +258,9 @@ class TransformerBaseKerasAccuracy(TransformerBenchmark):
     """
     self._setup()
     FLAGS.num_gpus = 8
-    FLAGS.data_dir = os.path.join(root_data_dir,
+    FLAGS.data_dir = os.path.join(self.root_data_dir,
                                   'wmt32k-en2de-xunkai-preprocess')
-    FLAGS.vocab_file = os.path.join(root_data_dir,
+    FLAGS.vocab_file = os.path.join(self.root_data_dir,
                                     'wmt32k-en2de-xunkai-preprocess',
                                     'vocab.ende.32768')
     # Sets values directly to avoid validation check.
@@ -285,9 +286,9 @@ class TransformerBaseKerasAccuracy(TransformerBenchmark):
     """
     self._setup()
     FLAGS.num_gpus = 8
-    FLAGS.data_dir = os.path.join(root_data_dir,
+    FLAGS.data_dir = os.path.join(self.root_data_dir,
                                   'wmt32k-en2de-xunkai-preprocess')
-    FLAGS.vocab_file = os.path.join(root_data_dir,
+    FLAGS.vocab_file = os.path.join(self.root_data_dir,
                                     'wmt32k-en2de-xunkai-preprocess',
                                     'vocab.ende.32768')
     # Sets values directly to avoid validation check.
