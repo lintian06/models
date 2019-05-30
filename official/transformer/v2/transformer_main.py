@@ -143,14 +143,14 @@ class TransformerTask(object):
 
     cased_score, uncased_score = None, None
     for i in range(1, iterations + 1):
-      print("Start train iteration:{}/{}".format(i, iterations))
+      print("Start train iteration: {}/{}".format(i, iterations))
       history = model.fit(
           train_ds,
           initial_epoch=i-1,
           epochs=i,
           steps_per_epoch=flags_obj.steps_between_evals,
           callbacks=callbacks)
-      print("End train iteration:{}/{} global step:{}".format(
+      print("End train iteration: {}/{} global step:{}".format(
           i,
           iterations,
           i*flags_obj.steps_between_evals))
@@ -159,7 +159,6 @@ class TransformerTask(object):
 
       if (flags_obj.bleu_source and flags_obj.bleu_ref):
         uncased_score, cased_score = self.eval()
-
       print("BLEU: uncased={}, cased={}".format(uncased_score, cased_score))
 
     stats = misc.build_stats(history, callbacks)
