@@ -208,13 +208,14 @@ class TransformerBaseKerasAccuracy(TransformerBenchmark):
     """
     self._setup()
     FLAGS.num_gpus = 8
+    FLAGS.distribution_strategy = 'mirrored'
     FLAGS.data_dir = self.train_data_dir
     FLAGS.vocab_file = self.vocab_file
     # Sets values directly to avoid validation check.
     FLAGS['bleu_source'].value = self.bleu_source
     FLAGS['bleu_ref'].value = self.bleu_ref
     FLAGS.param_set = 'base'
-    FLAGS.batch_size = 32768  # 3072*8
+    FLAGS.batch_size = 32768  # 4096*8
     FLAGS.steps_between_evals = 10000
     FLAGS.train_steps = 100000  # 10 epches
     FLAGS.static_batch = True
@@ -233,6 +234,7 @@ class TransformerBaseKerasAccuracy(TransformerBenchmark):
     """
     self._setup()
     FLAGS.num_gpus = 8
+    FLAGS.distribution_strategy = 'mirrored'
     FLAGS.data_dir = self.train_data_dir
     FLAGS.vocab_file = self.vocab_file
     # Sets values directly to avoid validation check.
@@ -258,6 +260,7 @@ class TransformerBaseKerasAccuracy(TransformerBenchmark):
     """
     self._setup()
     FLAGS.num_gpus = 8
+    FLAGS.distribution_strategy = 'mirrored'
     FLAGS.data_dir = os.path.join(self.root_data_dir,
                                   'wmt32k-en2de-xunkai-preprocess')
     FLAGS.vocab_file = os.path.join(self.root_data_dir,
@@ -267,7 +270,7 @@ class TransformerBaseKerasAccuracy(TransformerBenchmark):
     FLAGS['bleu_source'].value = self.bleu_source
     FLAGS['bleu_ref'].value = self.bleu_ref
     FLAGS.param_set = 'base'
-    FLAGS.batch_size = 32768  # 3072*8
+    FLAGS.batch_size = 32768  # 4096*8
     FLAGS.steps_between_evals = 10000
     FLAGS.train_steps = 100000  # 10 epches
     FLAGS.static_batch = True
@@ -286,6 +289,7 @@ class TransformerBaseKerasAccuracy(TransformerBenchmark):
     """
     self._setup()
     FLAGS.num_gpus = 8
+    FLAGS.distribution_strategy = 'mirrored'
     FLAGS.data_dir = os.path.join(self.root_data_dir,
                                   'wmt32k-en2de-xunkai-preprocess')
     FLAGS.vocab_file = os.path.join(self.root_data_dir,
