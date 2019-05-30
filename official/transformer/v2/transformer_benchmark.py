@@ -249,6 +249,62 @@ class TransformerBaseKerasAccuracy(TransformerBenchmark):
                                    bleu_min=27.5,
                                    bleu_max=28.6)
 
+  def benchmark_base_8_gpu_static_64_xunkai_data(self):
+    """Benchmark 8 gpu with static batch max_length=64.
+
+      The paper uses 8 GPUs and a much larger effective batch size.
+      This converged to the 28.2 BLEU (uncased) (better than SOTA).
+    """
+    self._setup()
+    FLAGS.num_gpus = 8
+    FLAGS.data_dir = os.path.join(root_data_dir,
+                                  'wmt32k-en2de-xunkai-preprocess')
+    FLAGS.vocab_file = os.path.join(root_data_dir,
+                                    'wmt32k-en2de-xunkai-preprocess',
+                                    'vocab.ende.32768')
+    # Sets values directly to avoid validation check.
+    FLAGS['bleu_source'].value = self.bleu_source
+    FLAGS['bleu_ref'].value = self.bleu_ref
+    FLAGS.param_set = 'base'
+    FLAGS.batch_size = 32768  # 3072*8
+    FLAGS.steps_between_evals = 10000
+    FLAGS.train_steps = 100000  # 10 epches
+    FLAGS.static_batch = True
+    FLAGS.max_length = 64
+    FLAGS.model_dir = self._get_model_dir('benchmark_base_8_gpu_static_64')
+    self._run_and_report_benchmark(total_batch_size=FLAGS.batch_size,
+                                   log_steps=FLAGS.log_steps,
+                                   bleu_min=27.0,
+                                   bleu_max=28.0)
+
+  def benchmark_big_8_gpu_static_64_xunkai_data(self):
+    """Benchmark 8 gpu with static batch max_length=64.
+
+      The paper uses 8 GPUs and a much larger effective batch size. This
+      converged to the 28.6 BLEU (uncased) (better than SOTA).
+    """
+    self._setup()
+    FLAGS.num_gpus = 8
+    FLAGS.data_dir = os.path.join(root_data_dir,
+                                  'wmt32k-en2de-xunkai-preprocess')
+    FLAGS.vocab_file = os.path.join(root_data_dir,
+                                    'wmt32k-en2de-xunkai-preprocess',
+                                    'vocab.ende.32768')
+    # Sets values directly to avoid validation check.
+    FLAGS['bleu_source'].value = self.bleu_source
+    FLAGS['bleu_ref'].value = self.bleu_ref
+    FLAGS.param_set = 'big'
+    FLAGS.batch_size = 24576  # 3072*8
+    FLAGS.steps_between_evals = 10000
+    FLAGS.train_steps = 100000  # 10 epches
+    FLAGS.static_batch = True
+    FLAGS.max_length = 64
+    FLAGS.model_dir = self._get_model_dir('benchmark_big_8_gpu_static_64')
+    self._run_and_report_benchmark(total_batch_size=FLAGS.batch_size,
+                                   log_steps=FLAGS.log_steps,
+                                   bleu_min=27.5,
+                                   bleu_max=28.6)
+
 
 class TransformerKerasBenchmark(TransformerBenchmark):
   """Benchmarks for Transformer (Base and Big) using Keras."""
