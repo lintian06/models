@@ -53,6 +53,28 @@ class UnicodeRegex(object):
 
 uregex = UnicodeRegex()
 
+# Unicode utility functions that work with Python 2 and 3
+def native_to_unicode(s):
+  if is_unicode(s):
+    return s
+  try:
+    return to_unicode(s)
+  except UnicodeDecodeError:
+    res = to_unicode(s, ignore_errors=True)
+    tf.logging.info("Ignoring Unicode error, outputting: %s" % res)
+    return res
+
+
+def is_unicode(s):
+  return isinstance(s, six.text_type)
+
+
+def to_unicode(s, ignore_errors=False):
+  if is_unicode(s):
+    return s
+  error_mode = "ignore" if ignore_errors else "strict"
+  return s.decode("utf-8", errors=error_mode)
+
 
 def bleu_tokenize(string):
   r"""Tokenize a string following the official BLEU implementation.
@@ -84,10 +106,13 @@ def bleu_tokenize(string):
   return string.split()
 
 
-def bleu_wrapper(ref_filename, hyp_filename, case_sensitive=False):
+def bleu_wrapper(ref_filename, hyp_filename, case_sensitive=False, unicode_fix=True, output=None):
   """Compute BLEU for two files (reference and hypothesis translation)."""
   ref_lines = tf.io.gfile.GFile(ref_filename).read().strip().splitlines()
   hyp_lines = tf.io.gfile.GFile(hyp_filename).read().strip().splitlines()
+  if unicode_fix:
+    ref_lines = [native_to_unicode(x) for x in ref_lines]
+    hyp_lines = [native_to_unicode(x) for x in hyp_lines]
 
   if len(ref_lines) != len(hyp_lines):
     raise ValueError("Reference and translation files have different number of "
@@ -98,17 +123,35 @@ def bleu_wrapper(ref_filename, hyp_filename, case_sensitive=False):
     hyp_lines = [x.lower() for x in hyp_lines]
   ref_tokens = [bleu_tokenize(x) for x in ref_lines]
   hyp_tokens = [bleu_tokenize(x) for x in hyp_lines]
+
+  if output and not case_sensitive:
+    with tf.io.gfile.GFile(FLAGS.output, 'w') as w:
+      for i in range(len(ref_tokens)):
+        print(ref_lines[i])
+        print(ref_tokens[i])
+        print(hyp_tokens[i])
+
+        w.write(ref_lines[i])
+        w.write("\n")
+        w.write("  ".join(ref_tokens[i]))
+        w.write("\n")
+        w.write(hyp_lines[i])
+        w.write("\n")
+        w.write("  ".join(hyp_tokens[i]))
+        w.write("\n")
+        w.write("\n")
+
   return metrics.compute_bleu(ref_tokens, hyp_tokens) * 100
 
 
 def main(unused_argv):
   if FLAGS.bleu_variant in ("both", "uncased"):
-    score = bleu_wrapper(FLAGS.reference, FLAGS.translation, False)
-    tf.logging.info("Case-insensitive results: %f" % score)
+    score = bleu_wrapper(FLAGS.reference, FLAGS.translation, False, FLAGS.unicode_fix, FLAGS.output)
+    tf.compat.v1.logging.info("Case-insensitive results: %f" % score)
 
   if FLAGS.bleu_variant in ("both", "cased"):
-    score = bleu_wrapper(FLAGS.reference, FLAGS.translation, True)
-    tf.logging.info("Case-sensitive results: %f" % score)
+    score = bleu_wrapper(FLAGS.reference, FLAGS.translation, True, FLAGS.unicode_fix, FLAGS.output)
+    tf.compat.v1.logging.info("Case-sensitive results: %f" % score)
 
 
 def define_compute_bleu_flags():
@@ -123,6 +166,10 @@ def define_compute_bleu_flags():
       help=flags_core.help_wrap("File containing reference translation."))
   flags.mark_flag_as_required("reference")
 
+  flags.DEFINE_boolean(
+      name="unicode_fix", default=True,
+      help=flags_core.help_wrap("Whether fix unicode."))
+
   flags.DEFINE_enum(
       name="bleu_variant", short_name="bv", default="both",
       enum_values=["both", "uncased", "cased"], case_sensitive=False,
@@ -130,9 +177,14 @@ def define_compute_bleu_flags():
           "Specify one or more BLEU variants to calculate. Variants: \"cased\""
           ", \"uncased\", or \"both\"."))
 
+  flags.DEFINE_string(
+      name="output", default=None,
+      help=flags_core.help_wrap("File containing output."))
+
+
 
 if __name__ == "__main__":
-  tf.logging.set_verbosity(tf.logging.INFO)
+  tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.INFO)
   define_compute_bleu_flags()
   FLAGS = flags.FLAGS
   absl_app.run(main)
